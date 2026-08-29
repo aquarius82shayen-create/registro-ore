@@ -1,0 +1,17 @@
+{
+  "name": "Registro Ore",
+  "short_name": "Registro Ore",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f1ec",
+  "theme_color": "#c4b3a0",
+  "icons": [
+    {
+      "src": "icona.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
