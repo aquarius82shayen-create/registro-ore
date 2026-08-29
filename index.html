@@ -54,6 +54,9 @@ button{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);co
 .report-table th{font-weight:800;background:#eee}
 .report-table td.left{text-align:left}
 .report-total{margin-top:8px;display:flex;justify-content:space-between;border-top:1.5px solid #222;padding-top:5px;font-size:10px;font-weight:800}
+
+.report-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:999;padding:18px;overflow:auto}.report-modal.open{display:block}.report-sheet{background:#fff;max-width:900px;margin:auto;border-radius:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.2)}.report-actions{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}.report-actions button.close{background:#64748b}.report-preview .report-table{font-size:12px}.report-preview .report-table th,.report-preview .report-table td{padding:5px 6px}.report-preview .report-total{font-size:13px}@media(max-width:650px){.report-preview .report-table{font-size:10px}.report-preview .report-table th,.report-preview .report-table td{padding:3px}}
+@media print{.report-modal{position:static;display:block!important;background:#fff;padding:0;overflow:visible}.report-sheet{box-shadow:none;max-width:none;padding:0}.report-actions{display:none!important}.report-preview .report-table{font-size:8px}.report-preview .report-table th,.report-preview .report-table td{padding:2px 3px}}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="512x512" href="icona.png">
@@ -120,6 +123,16 @@ Per il calcolo della prima/ultima settimana del mese vengono letti anche i giorn
  </table>
  <div class="report-total"><span>Totale ore conteggiate</span><span id="reportTotal">0:00</span></div>
  <div class="report-total" style="border-top:0;padding-top:2px"><span>Giorni di ferie utilizzati</span><span id="reportFerie">0</span></div>
+</div>
+<div id="reportModal" class="report-modal no-print" aria-hidden="true">
+ <div class="report-sheet report-preview">
+  <div class="report-actions"><button id="printReportBtn" type="button">🖨️ Stampa</button><button id="closeReportBtn" type="button" class="close">Chiudi</button></div>
+  <div class="report-title">Registro Ore — <span id="previewMonth"></span></div>
+  <div class="report-subtitle">Riepilogo mensile per verifica ore · documento senza dati economici</div>
+  <table class="report-table"><thead><tr><th>Data</th><th>Giorno</th><th>Causale</th><th>Entrata</th><th>Uscita</th><th>Ore</th></tr></thead><tbody id="previewBody"></tbody></table>
+  <div class="report-total"><span>Totale ore conteggiate</span><span id="previewTotal">0:00</span></div>
+  <div class="report-total" style="border-top:0;padding-top:2px"><span>Giorni di ferie utilizzati</span><span id="previewFerie">0</span></div>
+ </div>
 </div>
 
 <script>
@@ -297,7 +310,17 @@ function buildReport(){
 }
 
 document.getElementById('open').addEventListener('click',render);
-document.getElementById('report').addEventListener('click',()=>{buildReport();window.print();});
+document.getElementById('report').addEventListener('click',()=>{
+ buildReport();
+ document.getElementById('previewBody').innerHTML=document.getElementById('reportBody').innerHTML;
+ document.getElementById('previewMonth').textContent=document.getElementById('reportMonth').textContent;
+ document.getElementById('previewTotal').textContent=document.getElementById('reportTotal').textContent;
+ document.getElementById('previewFerie').textContent=document.getElementById('reportFerie').textContent;
+ document.getElementById('reportModal').classList.add('open');
+ document.getElementById('reportModal').setAttribute('aria-hidden','false');
+});
+document.getElementById('closeReportBtn').addEventListener('click',()=>{document.getElementById('reportModal').classList.remove('open');document.getElementById('reportModal').setAttribute('aria-hidden','true');});
+document.getElementById('printReportBtn').addEventListener('click',()=>window.print());
 loadFerieQuota();render();
 })();
 </script>
