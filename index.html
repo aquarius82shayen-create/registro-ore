@@ -38,26 +38,93 @@ button{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);co
 }
 
 @media print{
- @page{size:A5 landscape;margin:6mm}
- body{background:#fff;color:#111}
- .app{max-width:none;padding:0}
- body *{visibility:hidden}
- #printReport,#printReport *{visibility:visible}
- #printReport{position:absolute;left:0;top:0;width:100%;display:block}
- .no-print{display:none!important}
-}
-#printReport{display:none}
-@media print{#printReport{display:block!important}}
-.report-title{font-size:17px;font-weight:800;margin-bottom:2px}
-.report-subtitle{font-size:10px;color:#555;margin-bottom:8px}
-.report-table{width:100%;border-collapse:collapse;font-size:8px}
-.report-table th,.report-table td{border:1px solid #999;padding:2px 3px;text-align:center}
-.report-table th{font-weight:800;background:#eee}
-.report-table td.left{text-align:left}
-.report-total{margin-top:8px;display:flex;justify-content:space-between;border-top:1.5px solid #222;padding-top:5px;font-size:10px;font-weight:800}
+  @page{size:A5 portrait;margin:4mm}
 
-.report-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:999;padding:18px;overflow:auto}.report-modal.open{display:block}.report-sheet{background:#fff;max-width:900px;margin:auto;border-radius:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.2)}.report-actions{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}.report-actions button.close{background:#64748b}.report-preview .report-table{font-size:12px}.report-preview .report-table th,.report-preview .report-table td{padding:5px 6px}.report-preview .report-total{font-size:13px}@media(max-width:650px){.report-preview .report-table{font-size:10px}.report-preview .report-table th,.report-preview .report-table td{padding:3px}}
-@media print{.report-modal{position:static;display:block!important;background:#fff;padding:0;overflow:visible}.report-sheet{box-shadow:none;max-width:none;padding:0}.report-actions{display:none!important}.report-preview .report-table{font-size:8px}.report-preview .report-table th,.report-preview .report-table td{padding:2px 3px}}
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    background:#fff;
+    color:#111;
+  }
+
+  body *{visibility:hidden}
+
+  #printReport,
+  #printReport *{visibility:visible}
+
+  #printReport{
+    display:block!important;
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    margin:0;
+    padding:0;
+  }
+
+  .no-print{display:none!important}
+
+  .report-modal{
+    position:static!important;
+    display:block!important;
+    background:#fff;
+    padding:0;
+    margin:0;
+    overflow:visible;
+  }
+
+  .report-sheet{
+    box-shadow:none;
+    max-width:none;
+    width:100%;
+    margin:0;
+    padding:0;
+  }
+
+  .report-actions{display:none!important}
+
+  .report-title{
+    font-size:13px;
+    font-weight:800;
+    margin:0 0 2px;
+  }
+
+  .report-subtitle{
+    font-size:8px;
+    margin-bottom:4px;
+  }
+
+  .report-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:7px;
+    page-break-inside:avoid;
+  }
+
+  .report-table th,
+  .report-table td{
+    border:1px solid #999;
+    padding:1px 2px;
+    text-align:center;
+  }
+
+  .report-table th{
+    font-weight:800;
+    background:#eee;
+  }
+
+  .report-table td.left{
+    text-align:left;
+  }
+
+  .report-total{
+    margin-top:4px;
+    padding-top:3px;
+    font-size:8px;
+    font-weight:800;
+  }
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="512x512" href="icona.png">
