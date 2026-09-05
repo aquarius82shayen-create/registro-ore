@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registro Ore</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#17202a;--muted:#68717d;--line:#dfe3e8;--accent:#2563eb;--good:#15803d;--bad:#b42318;--off:#dcfce7;--ferie:#e0f2fe}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+.app{max-width:920px;margin:auto;padding:14px}
+.top{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+select,input,button{font:inherit}
+select,input{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff;color:var(--text)}
+button{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:white;font-weight:700}
+.secondary{background:#475569}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px}
+.label{font-size:11px;color:var(--muted)}.value{font-size:20px;font-weight:800;margin-top:2px}
+.calendar{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.weekdays,.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.weekday{text-align:center;padding:7px 2px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;color:var(--muted)}
+.day{min-width:0;min-height:144px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;background:#fff}
+.day:nth-child(7n){border-right:0}.day.off{background:var(--off)}.day.ferie{background:var(--ferie)}
+.daynum{font-weight:800;font-size:13px;margin-bottom:6px}
+.day input{width:100%;font-size:16px;padding:8px 5px;margin-bottom:5px}
+.day select{width:100%;font-size:12px;padding:6px 4px;margin-bottom:5px}
+.calc{font-size:11px;line-height:1.4}.muted{color:var(--muted)}.good{color:var(--good);font-weight:750}.bad{color:var(--bad);font-weight:750}
+.week-note{font-size:10px;color:var(--muted);padding:4px 7px;background:#fafbfc;border-bottom:1px solid var(--line)}
+.note{font-size:11px;color:var(--muted);line-height:1.45;margin-top:10px}
+.ferie-box{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+@media(max-width:650px){
+ .app{padding:7px}.summary{grid-template-columns:repeat(2,1fr)}
+ .weekday{font-size:9px}.day{min-height:142px;padding:4px}.daynum{font-size:12px}
+ .day input{font-size:16px;padding:7px 3px}.day select{font-size:11px}
+ .calc{font-size:9.5px}
+}
+
+/* Visualizzazione normale del riepilogo */
+#printReport{display:none}
+
+.report-modal{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.45);
+ display:none;
+ z-index:999;
+ padding:18px;
+ overflow:auto;
+}
+.report-modal.open{display:block}
+.report-sheet{
+ background:#fff;
+ max-width:900px;
+ margin:auto;
+ border-radius:14px;
+ padding:16px;
+ box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+.report-actions{
+ display:flex;
+ gap:8px;
+ justify-content:flex-end;
+ margin-bottom:10px;
+}
+.report-actions button.close{background:#64748b}
+.report-preview .report-table{font-size:12px}
+.report-preview .report-table th,
+.report-preview .report-table td{padding:5px 6px}
+.report-preview .report-total{font-size:13px}
+@media(max-width:650px){
+ .report-preview .report-table{font-size:10px}
+ .report-preview .report-table th,
+ .report-preview .report-table td{padding:3px}
+}
+
+/* Stampa: un solo foglio A5 verticale */
+@media print{
+  @page{size:A5 portrait;margin:5mm}
+
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    background:#fff;
+    color:#111;
+  }
+
+  body *{visibility:hidden}
+
+  #printReport,
+  #printReport *{visibility:visible}
+
+  #printReport{
+    display:block!important;
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    margin:0;
+    padding:0;
+  }
+
+  .no-print{display:none!important}
+
+  .report-modal{
+    position:static!important;
+    display:block!important;
+    background:#fff;
+    padding:0;
+    margin:0;
+    overflow:visible;
+  }
+
+  .report-sheet{
+    box-shadow:none;
+    max-width:none;
+    width:100%;
+    margin:0;
+    padding:0;
+  }
+
+  .report-actions{display:none!important}
+
+  .report-title{
+    font-size:13px;
+    font-weight:800;
+    margin:0 0 2px;
+  }
+
+  .report-subtitle{
+    font-size:8px;
+    margin-bottom:4px;
+  }
+
+  .report-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:7px;
+    page-break-inside:avoid;
+  }
+
+  .report-table th,
+  .report-table td{
+    border:1px solid #999;
+    padding:1px 2px;
+    text-align:center;
+  }
+
+  .report-table th{
+    font-weight:800;
+    background:#eee;
+  }
+
+  .report-table td.left{text-align:left}
+
+  .report-total{
+    margin-top:4px;
+    padding-top:3px;
+    font-size:8px;
+    font-weight:800;
+  }
+}
+</style>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="512x512" href="icona.png">
+<link rel="apple-touch-icon" href="icona.png">
+<meta name="theme-color" content="#c4b3a0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Registro Ore">
+</head>
+<body>
+<div class="app no-print">
+<h2 style="margin:0 0 3px">Registro ore</h2>
+<div class="note" style="margin-top:0">Settimana lunedì–domenica · 30 ore · €10/ora extra</div>
+
+<div class="top" style="margin-top:11px">
+ <label class="field">Mese<select id="month"></select></label>
+ <label class="field">Anno<input id="year" type="number" min="2000" max="2100"></label>
+ <button id="open" type="button">Apri mese</button>
+ <button id="report" type="button" class="secondary">🖨️ Riepilogo mese</button>
+</div>
+
+<div class="ferie-box" style="margin-top:8px">
+ <label class="field">Ferie spettanti nell'anno<input id="ferieTotali" type="number" min="0" step="0.01" inputmode="decimal" placeholder="es. 26"></label>
+ <label class="field">Saldo ferie iniziale<input id="ferieIniziali" type="number" min="0" step="0.01" inputmode="decimal" placeholder="es. 2"></label>
+</div>
+<div class="top" style="margin-top:8px">
+ <button id="saveData" type="button">💾 Salva dati</button>
+ <button id="loadData" type="button">↥ Ripristina dati</button>
+ <input id="dataFile" type="file" accept=".json,application/json" style="display:none">
+</div>
+<div id="saveMsg" class="note" style="margin-top:4px"></div>
+
+<div class="summary">
+ <div class="card"><div class="label">Ore lavorate nel mese</div><div id="total" class="value">0:00</div></div>
+ <div class="card"><div class="label">Saldo extra</div><div id="balance" class="value">0:00</div></div>
+ <div class="card"><div class="label">Saldo economico</div><div id="money" class="value">€ 0,00</div></div>
+ <div class="card"><div class="label">Settimane coinvolte</div><div id="weeks" class="value">0</div></div>
+ <div class="card"><div class="label">Ferie maturate</div><div id="ferieMaturate" class="value">—</div></div>
+ <div class="card"><div class="label">Ferie residue</div><div id="ferieResidue" class="value">—</div></div>
+</div>
+
+<div class="calendar">
+ <div class="weekdays">
+  <div class="weekday">LUN</div><div class="weekday">MAR</div><div class="weekday">MER</div>
+  <div class="weekday">GIO</div><div class="weekday">VEN</div><div class="weekday">SAB</div><div class="weekday">DOM</div>
+ </div>
+ <div id="grid"></div>
+</div>
+
+<div class="note">
+<b>Come funziona:</b> se il menu resta vuoto, il giorno è considerato lavorato e vengono usati entrata/uscita.
+<strong>Libero</strong> non conta nel numero dei giorni lavorativi. <strong>Ferie</strong> conta sempre come 5:00 ai fini del monte ore, ma non genera Extra.
+Anche se è domenica. La domenica viene trattata come un normale giorno lavorativo. Se un turno supera la mezzanotte, tutte le ore restano nel giorno di entrata.
+Per il calcolo della prima/ultima settimana del mese vengono letti anche i giorni del mese vicino, senza mostrarli nel calendario.
+</div>
+</div>
+
+<div id="printReport">
+ <div class="report-title">Registro Ore — <span id="reportMonth"></span></div>
+ <div class="report-subtitle">Riepilogo mensile per verifica ore</div>
+ <table class="report-table">
+  <thead><tr><th>Data</th><th>Giorno</th><th>Causale</th><th>Entrata</th><th>Uscita</th><th>Ore</th></tr></thead>
+  <tbody id="reportBody"></tbody>
+ </table>
+ <div class="report-total"><span>Totale ore conteggiate</span>&nbsp;<span id="reportTotal">0:00</span></div>
+ <div class="report-total" style="border-top:0;padding-top:2px"><span>Giorni di ferie utilizzati</span>&nbsp;<span id="reportFerie">0</span></div>
+</div>
+<div id="reportModal" class="report-modal no-print" aria-hidden="true">
+ <div class="report-sheet report-preview">
+  <div class="report-actions"><button id="printReportBtn" type="button">🖨️ Stampa</button><button id="closeReportBtn" type="button" class="close">Chiudi</button></div>
+  <div class="report-title">Registro Ore — <span id="previewMonth"></span></div>
+  <div class="report-subtitle">Riepilogo mensile per verifica ore</div>
+  <table class="report-table"><thead><tr><th>Data</th><th>Giorno</th><th>Causale</th><th>Entrata</th><th>Uscita</th><th>Ore</th></tr></thead><tbody id="previewBody"></tbody></table>
+  <div class="report-total"><span>Totale ore conteggiate</span>&nbsp;<span id="previewTotal">0:00</span></div>
+  <div class="report-total" style="border-top:0;padding-top:2px"><span>Giorni di ferie utilizzati</span>&nbsp;<span id="previewFerie">0</span></div>
+ </div>
+</div>
+
+<script>
+(()=>{'use strict';
+const months=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const dayNames=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+const M=document.getElementById('month'),Y=document.getElementById('year'),G=document.getElementById('grid');
+const now=new Date();Y.value=now.getFullYear();
+months.forEach((x,i)=>{let o=document.createElement('option');o.value=i;o.textContent=x;M.appendChild(o)});M.value=now.getMonth();
+
+const prefix='ore_lavoro_v3_';
+const ferieKey=y=>prefix+'ferie_totali_'+y;
+const ferieInitialKey=y=>prefix+'ferie_iniziali_'+y;
+const ferieTotali=document.getElementById('ferieTotali');
+const ferieIniziali=document.getElementById('ferieIniziali');
+const ferieMaturate=document.getElementById('ferieMaturate');
+const ferieResidue=document.getElementById('ferieResidue');
+
+const countFerieYear=y=>{
+ let n=0;
+ for(let m=0;m<12;m++){
+  const last=new Date(y,m+1,0).getDate();
+  for(let day=1;day<=last;day++){
+   if((read(new Date(y,m,day)).status||'')==='Ferie') n++;
+  }
+ }
+ return n;
+};
+const loadFerieQuota=()=>{
+ const y=Number(Y.value);
+ const q=localStorage.getItem(ferieKey(y));
+ const i=localStorage.getItem(ferieInitialKey(y));
+ ferieTotali.value=q===null?'':q;
+ ferieIniziali.value=i===null?'':i;
+};
+ferieTotali.addEventListener('change',()=>{localStorage.setItem(ferieKey(Number(Y.value)),String(Math.max(0,Number(ferieTotali.value)||0)));render();});
+ferieIniziali.addEventListener('change',()=>{localStorage.setItem(ferieInitialKey(Number(Y.value)),String(Math.max(0,Number(ferieIniziali.value)||0)));render();});
+Y.addEventListener('change',()=>{loadFerieQuota();render();});
+
+const saveData=document.getElementById('saveData');
+const loadData=document.getElementById('loadData');
+const dataFile=document.getElementById('dataFile');
+const saveMsg=document.getElementById('saveMsg');
+
+saveData.addEventListener('click',()=>{
+ const backup={version:2,createdAt:new Date().toISOString(),data:{}};
+ for(let i=0;i<localStorage.length;i++){
+  const k=localStorage.key(i);
+  if(k && k.startsWith(prefix)) backup.data[k]=localStorage.getItem(k);
+ }
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download='registro_ore_backup_'+new Date().toISOString().slice(0,10)+'.json';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ saveMsg.textContent='Dati salvati nel file di backup.';
+});
+
+loadData.addEventListener('click',()=>dataFile.click());
+dataFile.addEventListener('change',()=>{
+ const file=dataFile.files[0];
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const backup=JSON.parse(reader.result);
+   if(!backup || !backup.data || typeof backup.data!=='object') throw new Error('invalid');
+   let n=0;
+   for(const [k,v] of Object.entries(backup.data)){
+    if(k.startsWith(prefix)){localStorage.setItem(k,v);n++;}
+   }
+   loadFerieQuota();render();
+   saveMsg.textContent='Dati ripristinati: '+n+' record recuperati.';
+  }catch(e){saveMsg.textContent='File di backup non valido.';}
+  dataFile.value='';
+ };
+ reader.readAsText(file);
+});
+
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const read=d=>{try{return JSON.parse(localStorage.getItem(prefix+iso(d))||'{}')}catch(e){return{}}};
+const write=(d,o)=>localStorage.setItem(prefix+iso(d),JSON.stringify(o));
+const monday=d=>{let x=new Date(d),shift=(x.getDay()+6)%7;x.setDate(x.getDate()-shift);return x};
+const parse=v=>{if(!v)return null;let p=v.split(':');if(p.length!==2)return null;let h=Number(p[0]),m=Number(p[1]);return Number.isInteger(h)&&Number.isInteger(m)&&h>=0&&h<=23&&m>=0&&m<=59?h*60+m:null};
+const fmt=n=>{let s=n<0?'-':'',x=Math.round(Math.abs(n));return s+Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
+const eur=n=>(n<0?'-':'')+'€ '+Math.abs(n).toFixed(2).replace('.',',');
+
+function info(d){
+ const z=read(d),status=z.status||'',a=parse(z.in||''),b=parse(z.out||'');
+ if(status==='Ferie')return {status:'Ferie',count:true,work:300,in:z.in||'',out:z.out||''};
+ if(status==='Libero')return {status:'Libero',count:false,work:0,in:z.in||'',out:z.out||''};
+ if(a===null||b===null)return {status:'',count:true,work:0,in:z.in||'',out:z.out||''};
+ let w=b-a;if(w<0)w+=1440;
+ return {status:'',count:true,work:w,in:z.in||'',out:z.out||''};
+}
+function weekDates(start){let a=[];for(let i=0;i<7;i++){let d=new Date(start);d.setDate(d.getDate()+i);a.push(d)}return a}
+
+function accruedFerie(y,m){
+ const quota=Number(localStorage.getItem(ferieKey(y))||0);
+ // Maturazione progressiva: un rateo per ogni mese dell'anno.
+ // Nel mese selezionato consideriamo maturati i mesi trascorsi + il mese corrente.
+ return quota>0?quota*(m+1)/12:0;
+}
+
+function render(){
+ const y=Number(Y.value),m=Number(M.value);
+ const first=new Date(y,m,1),last=new Date(y,m+1,0),start=monday(first);
+ G.innerHTML='';
+ let visible=[],weekCount=0;
+ for(let ws=new Date(start);ws<=last;ws.setDate(ws.getDate()+7)){
+   weekCount++;
+   const dates=weekDates(ws), infos=dates.map(info);
+   const count=infos.filter(x=>x.count).length;
+   const target=count?1800/count:0;
+   const week=document.createElement('div');week.className='week';
+   dates.forEach((d,i)=>{
+     if(d.getMonth()!==m){const blank=document.createElement('div');blank.className='day';blank.style.visibility='hidden';week.appendChild(blank);return;}
+     const a=infos[i],cell=document.createElement('div');cell.className='day';
+     if(a.status==='Libero')cell.classList.add('off');
+     if(a.status==='Ferie')cell.classList.add('ferie');
+     const num=document.createElement('div');num.className='daynum';num.textContent=d.getDate()+' · '+dayNames[d.getDay()];cell.appendChild(num);
+     const sel=document.createElement('select');
+     [['','Lavoro'],['Libero','Libero'],['Ferie','Ferie']].forEach(([v,t])=>{let o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)});
+     sel.value=a.status==='Libero'||a.status==='Ferie'?a.status:'';
+     const tin=document.createElement('input');tin.type='time';tin.value=a.in;tin.setAttribute('aria-label','Entrata');
+     const tout=document.createElement('input');tout.type='time';tout.value=a.out;tout.setAttribute('aria-label','Uscita');
+     const calc=document.createElement('div');calc.className='calc';
+     cell.append(sel,tin,tout,calc);week.appendChild(cell);
+     function save(){let status=sel.value;if(status){tin.value='';tout.value='';}write(d,{status,in:tin.value,out:tout.value});render();}
+     sel.addEventListener('change',save);
+     tin.addEventListener('change',()=>{sel.value='';write(d,{status:'',in:tin.value,out:tout.value});render()});
+     tout.addEventListener('change',()=>{sel.value='';write(d,{status:'',in:tin.value,out:tout.value});render()});
+     const hasActual=a.status==='Ferie'||(a.in!==''&&a.out!=='');
+     let ex=(a.status==='Ferie')?0:(hasActual?a.work-target:0),cash=ex/60*10;
+     if(a.status==='Ferie')calc.innerHTML='<span class="muted">Ferie = 5:00</span><br>Extra <span class="'+(ex>=0?'good':'bad')+'">'+fmt(ex)+'</span><br><span class="'+(cash>=0?'good':'bad')+'">'+(cash>=0?'+':'')+eur(cash)+'</span>';
+     else if(hasActual)calc.innerHTML='<span class="muted">Ore</span> <b>'+fmt(a.work)+'</b><br><span class="muted">Target</span> '+fmt(target)+'<br><span class="'+(ex>=0?'good':'bad')+'">Extra '+fmt(ex)+'</span><br><span class="'+(cash>=0?'good':'bad')+'">'+(cash>=0?'+':'')+eur(cash)+'</span>';
+     else calc.innerHTML='<span class="muted">Inserisci entrata e uscita</span>';
+     visible.push({d,a,ex,cash});
+   });
+   const wn=document.createElement('div');wn.className='week-note';
+   wn.textContent=(count?('Settimana '+dates[0].getDate()+' '+months[dates[0].getMonth()]+' – '+dates[6].getDate()+' '+months[dates[6].getMonth()]+' · '+count+' giorni lavorativi · '+fmt(target)+' al giorno'):'Settimana senza giornate conteggiate');
+   G.appendChild(week);G.appendChild(wn);
+ }
+ const v=visible,total=v.reduce((s,x)=>s+x.a.work,0),bal=v.reduce((s,x)=>s+x.ex,0),cash=v.reduce((s,x)=>s+x.cash,0);
+ document.getElementById('total').textContent=fmt(total);
+ const be=document.getElementById('balance');be.textContent=fmt(bal);be.className='value '+(bal>0?'good':bal<0?'bad':'');
+ const me=document.getElementById('money');me.textContent=eur(cash);me.className='value '+(cash>0?'good':cash<0?'bad':'');
+ document.getElementById('weeks').textContent=weekCount;
+ const quota=Number(localStorage.getItem(ferieKey(y))||0),initial=Number(localStorage.getItem(ferieInitialKey(y))||0),used=countFerieYear(y),accrued=accruedFerie(y,m),residue=initial+accrued-used;
+ ferieMaturate.textContent=quota>0?accrued.toFixed(2).replace('.',','):'—';
+ ferieResidue.textContent=(quota>0||initial>0)?residue.toFixed(2).replace('.',','):'—';
+ ferieResidue.className='value '+(residue<0?'bad':'');
+}
+
+function buildReport(){
+ const y=Number(Y.value),m=Number(M.value),last=new Date(y,m+1,0).getDate();
+ const body=document.getElementById('reportBody');body.innerHTML='';
+ let total=0,ferie=0;
+ for(let day=1;day<=last;day++){
+  const d=new Date(y,m,day),z=read(d),a=info(d),tr=document.createElement('tr');
+  let cause='Lavoro',hours=a.work;
+  if(a.status==='Libero'){cause='Libero';hours=0;}
+  else if(a.status==='Ferie'){cause='Ferie';hours=300;ferie++;}
+  else if(!a.in||!a.out){cause='Non inserito';hours=0;}
+  if(hours)total+=hours;
+  const cells=[String(day).padStart(2,'0')+'/'+String(m+1).padStart(2,'0'),dayNames[d.getDay()],cause,a.in||'—',a.out||'—',hours?fmt(hours):'—'];
+  cells.forEach((txt,idx)=>{const td=document.createElement('td');td.textContent=txt;if(idx===2)td.className='left';tr.appendChild(td)});
+  body.appendChild(tr);
+ }
+ document.getElementById('reportMonth').textContent=months[m]+' '+y;
+ document.getElementById('reportTotal').textContent=fmt(total);
+ document.getElementById('reportFerie').textContent=String(ferie);
+}
+
+document.getElementById('open').addEventListener('click',render);
+document.getElementById('report').addEventListener('click',()=>{
+ buildReport();
+ document.getElementById('previewBody').innerHTML=document.getElementById('reportBody').innerHTML;
+ document.getElementById('previewMonth').textContent=document.getElementById('reportMonth').textContent;
+ document.getElementById('previewTotal').textContent=document.getElementById('reportTotal').textContent;
+ document.getElementById('previewFerie').textContent=document.getElementById('reportFerie').textContent;
+ document.getElementById('reportModal').classList.add('open');
+ document.getElementById('reportModal').setAttribute('aria-hidden','false');
+});
+document.getElementById('closeReportBtn').addEventListener('click',()=>{document.getElementById('reportModal').classList.remove('open');document.getElementById('reportModal').setAttribute('aria-hidden','true');});
+document.getElementById('printReportBtn').addEventListener('click',()=>window.print());
+loadFerieQuota();render();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) {window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));}
+</script>
+</body>
+</html>
